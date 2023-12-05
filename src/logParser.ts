@@ -1,11 +1,12 @@
 import * as fs from "fs";
 import * as readline from "readline";
 import mongoose from "mongoose";
+import { Timestamp } from "mongodb";
 require("dotenv").config();
 
-const logFilePath = "logs/AccessLogs (1).log";
+const logFilePath = "logs/AccessLogs (3).log";
 const suaUriDeConexao =
-  "mongodb+srv://nullbeta:JVkB8pQm1tOKdbni@cluster0.u7mz3qp.mongodb.net/?retryWrites=true&w=majority";
+  "mongodb+srv://nullbeta:JVkB8pQm1tOKdbni@cluster0.u7mz3qp.mongodb.net/sepherum?retryWrites=true&w=majority";
 
 mongoose.connect(suaUriDeConexao);
 mongoose.connection.once("open", () => {
@@ -15,9 +16,12 @@ mongoose.connection.once("open", () => {
 
 const LogSchema = new mongoose.Schema({
   ipAddress: String,
-  timestamp: Date,
+  date: Date,
+  time: String,
+  userName: String,
   version: String,
-  id: String,
+  idTransaction: String,
+  action: String,
   description: String,
 });
 
@@ -42,13 +46,27 @@ export const processLog = () => {
 };
 
 const parseLogLine = (line: string) => {
-  const [ipAddress, timestamp, version, id, description] = line.split(";");
+  const [
+    ipAddress,
+    date,
+    time,
+    userName,
+    version,
+    idTransaction,
+    action,
+    ...descriptionParts
+  ] = line.split(";");
+  const datePart = date.split("T").reverse().join("-");
+
   return {
     ipAddress,
-    timestamp: new Date(timestamp),
+    date: new Date(datePart),
+    time,
+    userName,
     version,
-    id,
-    description,
+    idTransaction,
+    action,
+    description: descriptionParts.join(";"),
   };
 };
 
